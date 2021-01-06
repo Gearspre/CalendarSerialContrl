@@ -1,9 +1,15 @@
 #include "ui.h"
+#include "serial.h"
 
 ui::ui()
 {
     ui_Init();
     resize(300,400);
+}
+
+QPushButton *ui::getBtn2()
+{
+    return btn2;
 }
 
 void ui::ui_Init()
@@ -28,5 +34,7 @@ void ui::ui_Init()
     vlayout->addWidget(combox);
 
     setLayout(vlayout);
-    //setMinimumSize(300,400);
+
+            //setMinimumSize(300,400);
 }
+

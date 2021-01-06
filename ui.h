@@ -11,6 +11,7 @@ class ui : public QWidget
     Q_OBJECT
 public:
     ui();
+    QPushButton* getBtn2();
     void ui_Init();
 private:
     QVBoxLayout* vlayout;
