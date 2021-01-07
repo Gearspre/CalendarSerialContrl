@@ -12,6 +12,11 @@ QPushButton *ui::getBtn2()
     return btn2;
 }
 
+QPushButton *ui::getBtn1()
+{
+    return btn1;
+}
+
 void ui::ui_Init()
 {
     combox = new QComboBox();
@@ -20,7 +25,7 @@ void ui::ui_Init()
 
     btn1 = new QPushButton();
     //btn1->setMinimumSize(100,50);
-    btn1->setText("Open");
+    btn1->setText("Send");
 
     btn2 = new QPushButton();
     //btn2->setMinimumSize(100,50);

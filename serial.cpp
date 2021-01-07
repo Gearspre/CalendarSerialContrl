@@ -15,7 +15,9 @@ void Serial::SerialInit()
     sport->setStopBits(QSerialPort::OneStop);
     sport->setBaudRate(QSerialPort::Baud115200);
     sport->setFlowControl(QSerialPort::NoFlowControl);
+    connect(serialUI->getBtn1(),&QPushButton::clicked,this,&Serial::SendEvent);
     connect(serialUI->getBtn2(),&QPushButton::clicked,this,&Serial::SyncEvent);
+
 }
 
 void Serial::SerialShow()
@@ -33,7 +35,7 @@ int Serial::AutoChoseSerial()
 
     foreach(const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
     {
-        if((info.description().indexOf("CH340") != -1))//Chose last CH340
+        if((info.description().indexOf("CH340") != -1))
         {
 #ifdef DEBUG
         qDebug()<<info.description();
@@ -42,6 +44,7 @@ int Serial::AutoChoseSerial()
             portName=info.portName();
             sport->setPortName(portName);
             sport->setPort(info);
+            break;
         }
     }
 
@@ -53,18 +56,42 @@ int Serial::AutoChoseSerial()
 #endif
     }
 
-    connect(sport,SIGNAL(readyRead()),this,SLOT(receiveInfo()));
+    connect(sport,&QIODevice::readyRead,this,&Serial::receiveInfo);
     return 1;
 }
 
 void Serial::SyncEvent()
 {
+    QTime aTime;
+    QDateTime adTime;
+    QString tString;
+
 #ifdef DEBUG
-    char SendHead=0xA0;
-    //sport->write(&SendHead);
-    Serial::sendInfo(&SendHead,1);
+    char SendData=HEAD;
+    sendInfo(&SendData,1);
+
+    Delay_MSec(DELAY_TIME);
+    SendData=ATIME;
+    sendInfo(&SendData,1);
+    Delay_MSec(DELAY_TIME);
+    tString=adTime.currentDateTime().toString("yyyyMMdd");
+    tString.append(aTime.currentTime().toString("hhmmss"));
+    qDebug()<<tString;
+    sendInfo(tString);
+    Delay_MSec(DELAY_TIME);
+    SendData=TAIL;
+    sendInfo(&SendData,1);
 #endif
 
+}
+
+void Serial::SendEvent()
+{
+#ifdef DEBUG
+    char SendHead=TAIL;
+    //sport->write(&SendHead);
+    sendInfo(&SendHead,1);
+#endif
 }
 
 //接收单片机的数据
@@ -134,10 +161,10 @@ char Serial::convertCharToHex(char ch)
 void Serial::sendInfo(char* info,int len)
 {
 
-    for(int i=0; i<len; ++i)
-    {
-        printf("0x%x\n", info[i]);
-    }
+//    for(int i=0; i<len; ++i)
+//    {
+//        printf("0x%x\n", info[i]);
+//    }
     sport->write(info,len);
 }
 
@@ -145,9 +172,17 @@ void Serial::sendInfo(const QString &info)
 {
 
     QByteArray sendBuf;
+#ifdef DEBUG
     qDebug()<<"Write to serial: "<<info;
+#endif
     convertStringToHex(info, sendBuf); //把QString 转换 为 hex
 
     sport->write(sendBuf);
+}
 
+void Serial::Delay_MSec(unsigned int msec)
+{
+    QEventLoop loop;//定义一个新的事件循环
+    QTimer::singleShot(msec, &loop, SLOT(quit()));//创建单次定时器，槽函数为事件循环的退出函数
+    loop.exec();//事件循环开始执行，程序会卡在这里，直到定时时间到，本循环被退出
 }
